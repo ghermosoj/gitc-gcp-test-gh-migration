@@ -14,11 +14,6 @@ setup_env_vars() {
     export secret_name="sec-gcpf-${env_char}-gh-token"
     export application_id="sec-gcpf-${env_char}-gh-app-id"
     export repo_url="https://github.com/ghermosoj/csr-github"
-    export bucket_name="cs-gcpf-${env_char}-gitc-${region_short}-test-rm"
-    export build_yaml_path="app-cloudbuild.yaml"
-    local current_url="${repo_url%/}"
-    export repo_name="${current_url##*/}"
-    export trigger_name="trg-${repo_name}-${env_char}-deploy"
 }
 
 . parse_args_init "$@"
@@ -35,32 +30,7 @@ export PATH="/workspace/.toolbox:$PATH"
 
 activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
 
+github_connect_host --project_id "${pipeline_project_id}" --connection_name "${connection_name}" --secret_id "${secret_name}" --application_id "${application_id}"
+
 github_link_repository --project_id "${pipeline_project_id}" --connection "${connection_name}" --repo_url "${repo_url}"
 
-if gcloud storage buckets describe "gs://${BUCKET_NAME}"; then
-    echo "[SUCCESS] Bucket gs://${BUCKET_NAME} already exists. Skipping."
-else
-    echo "[ACTION] Creating bucket gs://${BUCKET_NAME} in project ${pipeline_project_id}"
-    
-    if command -v create_tfstate_bucket &> /dev/null; then
-        create_tfstate_bucket --context "migration"
-    else
-        gcloud storage buckets create "gs://${BUCKET_NAME}" \
-          --project="${pipeline_project_id}" \
-          --location="${region}" \
-          --uniform-bucket-level-access
-    fi
-    echo "[SUCCESS] Bucket gs://${BUCKET_NAME} created successfully."
-fi
-
-echo "[INFO] Starting target app trigger creation phase..."
-
-create_github_trigger \
-  --project_id "${pipeline_project_id}" \
-  --region "${region}" \
-  --connection "${connection_name}" \
-  --repo_name "${repo_name}" \
-  --trigger_name "${trigger_name}" \
-  --event "push" \
-  --branch "main" \
-  --build_yaml_path "${build_yaml_path}"

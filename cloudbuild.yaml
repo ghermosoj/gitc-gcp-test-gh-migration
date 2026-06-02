@@ -19,17 +19,25 @@ steps:
         printf "[ INFO ] Installing Toolbox package...\n"
         dpkg --install /workspace/toolbox.deb
 
-  - id: 'execute-init-provisioning'
+  - id: 'activate-pipeline-sa'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         set -o errexit
-        
-        # Volvemos a mapear la toolbox instalada en el PATH de este nuevo paso
         export PATH="/workspace/.toolbox:$$PATH"
+        printf "[ INFO ] Activating pipeline service account for environment: $_ENV_CHAR...\n"
+        activate_pipeline_service_account --env_char "$_ENV_CHAR" --no_delete --credentials_file_path "/workspace/account.json"
 
-        printf "[ INFO ] Launching provisioning script for environment: $_ENV_CHAR...\n"
-        chmod +x ./init.sh
-        ./init.sh --env "$_ENV_CHAR" --region "$_REGION"
+  - id: 'print-hello-world'
+    name: 'alpine'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "********************************************************"
+        echo "  HELLO WORLD! Ejecutado directamente desde el paso     "
+        echo "********************************************************"
+        echo "Entorno actual: $_ENV_CHAR"
+        echo "********************************************************"
