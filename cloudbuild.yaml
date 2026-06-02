@@ -1,0 +1,35 @@
+steps:
+  - id: 'download-toolbox'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -o errexit
+        printf "[ INFO ] Downloading Toolbox (Version: $_TOOLBOX_VERSION)...\n"
+        gcloud storage cp "gs://cs-gcpf-$_ENV_CHAR-gitc-$_REGION_SHORT-toolbox-0001/toolbox_$_TOOLBOX_VERSION.deb" /workspace/toolbox.deb
+
+  - id: 'install-toolbox'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -o errexit
+        printf "[ INFO ] Installing Toolbox package...\n"
+        dpkg --install /workspace/toolbox.deb
+
+  - id: 'execute-init-provisioning'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -o errexit
+        
+        # Volvemos a mapear la toolbox instalada en el PATH de este nuevo paso
+        export PATH="/workspace/.toolbox:$$PATH"
+
+        printf "[ INFO ] Launching provisioning script for environment: $_ENV_CHAR...\n"
+        chmod +x ./init.sh
+        ./init.sh --env "$_ENV_CHAR" --region "$_REGION"
