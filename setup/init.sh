@@ -14,6 +14,7 @@ setup_env_vars() {
     export secret_name="sec-gcpf-${env_char}-gh-token"
     export application_id="sec-gcpf-${env_char}-gh-app-id"
     export repo_url="https://github.com/ghermosoj/gitc-gcp-test-gh-migration"
+    export branch="master"
 
     export build_yaml_path="cloudbuild.yaml"
 
@@ -55,8 +56,8 @@ github_connect_host --project_id "${pipeline_project_id}" --connection_name "${c
 github_link_repository --project_id "${pipeline_project_id}" --connection "${connection_name}" --repo_url "${repo_url}"
 
 
-create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-push" --connection "${connection_name}" --repo_name "${repo_name}" --event "push" --branch "main" --build_yaml_path "${build_yaml_path}"
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-push" --connection "${connection_name}" --repo_name "${repo_name}" --event "push" --branch "${branch}" --build_yaml_path "${build_yaml_path}"
 
-create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-manual" --connection "${connection_name}" --repo_name "${repo_name}" --event "manual" --branch "main" --build_yaml_path "${build_yaml_path}"
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-manual" --connection "${connection_name}" --repo_name "${repo_name}" --event "manual" --branch "${branch}" --build_yaml_path "${build_yaml_path}"
 
-create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-pubsub" --connection "${connection_name}" --repo_name "${repo_name}" --event "pubsub" --topic "${pubsub_topic}" --branch "main" --build_yaml_path "${build_yaml_path}"
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-pubsub" --connection "${connection_name}" --repo_name "${repo_name}" --event "pubsub" --topic "${pubsub_topic}" --branch "${branch}" --build_yaml_path "${build_yaml_path}"
