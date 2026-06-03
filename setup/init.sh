@@ -20,13 +20,10 @@ setup_env_vars() {
 
     local current_url="${repo_url%/}"
     export repo_name="${current_url##*/}"
-    echo "${repo_name}"
     export trigger_base_name="trg-${repo_name}-${env_char}"
     
     export pubsub_topic="test-github-topic"
     export repo_name="${repo_name%.git}"
-    echo "${repo_name}"
-    echo "${trigger_base_name}"
 }
 
 . parse_args_init "$@"
