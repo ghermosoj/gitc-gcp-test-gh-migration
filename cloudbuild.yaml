@@ -1,43 +1,14 @@
 steps:
-  - id: 'download-toolbox'
-    name: 'gcr.io/cloud-builders/gcloud'
+  # Paso 1: Tu Hello World personalizado usando las sustituciones que inyectó el script
+  - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        set -o errexit
-        printf "[ INFO ] Downloading Toolbox (Version: $_TOOLBOX_VERSION)...\n"
-        gcloud storage cp "gs://cs-gcpf-$_ENV_CHAR-gitc-$_REGION_SHORT-toolbox-0001/toolbox_$_TOOLBOX_VERSION.deb" /workspace/toolbox.deb
+        echo "========================================================"
+        echo "¡HELLO WORLD FROM GOOGLE CLOUD BUILD!"
+        echo "========================================================"
+        echo "It seems like everything work fine"
 
-  - id: 'install-toolbox'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -o errexit
-        printf "[ INFO ] Installing Toolbox package...\n"
-        dpkg --install /workspace/toolbox.deb
-
-  - id: 'activate-pipeline-sa'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set -o errexit
-        export PATH="/workspace/.toolbox:$$PATH"
-        printf "[ INFO ] Activating pipeline service account for environment: $_ENV_CHAR...\n"
-        activate_pipeline_service_account --env_char "$_ENV_CHAR" --no_delete --credentials_file_path "/workspace/account.json"
-
-  - id: 'print-hello-world'
-    name: 'alpine'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        echo "********************************************************"
-        echo "  HELLO WORLD! Ejecutado directamente desde el paso     "
-        echo "********************************************************"
-        echo "Entorno actual: $_ENV_CHAR"
-        echo "********************************************************"
+options:
+  logging: CLOUD_LOGGING_ONLY

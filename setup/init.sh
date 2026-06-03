@@ -1,8 +1,8 @@
 #!/bin/bash
 set -o errexit
 setup_env_vars() {
-    source load_config
-    source load_cmdb_client
+    source "/home/user/.toolbox/load_config"
+    source "/home/user/.toolbox/load_cmdb_client"
 
     export toolbox_version="1.7.5+test~1"
     export project_number=${DEFAULT[$env_char, "pipeline_project_number"]}
@@ -13,7 +13,19 @@ setup_env_vars() {
     export connection_name="conn-gcpf-${env_char}-github"
     export secret_name="sec-gcpf-${env_char}-gh-token"
     export application_id="sec-gcpf-${env_char}-gh-app-id"
-    export repo_url="https://github.com/ghermosoj/csr-github"
+    export repo_url="https://github.com/ghermosoj/gitc-gcp-test-gh-migration"
+
+    export build_yaml_path="cloudbuild.yaml"
+
+    local current_url="${repo_url%/}"
+    export repo_name="${current_url##*/}"
+    echo "${repo_name}"
+    export trigger_base_name="trg-${repo_name}-${env_char}"
+    
+    export pubsub_topic="test-github-topic"
+    export repo_name="${repo_name%.git}"
+    echo "${repo_name}"
+    echo "${trigger_base_name}"
 }
 
 . parse_args_init "$@"
@@ -26,11 +38,25 @@ env_char="${env}"
 
 setup_env_vars
 
-export PATH="/workspace/.toolbox:$PATH"
+# export PATH="/workspace/.toolbox:$PATH"
 
-activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
+# activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
 
-github_connect_host --project_id "${pipeline_project_id}" --connection_name "${connection_name}" --secret_id "${secret_name}" --application_id "${application_id}"
+if [ -f "/workspace/account.json" ]; then
+    echo "[INFO] Running on Cloud Build. Activating Service Account..."
+    activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
+else
+    echo "[WARN] Running in LOCAL machine. Skipping service account activation..."
+    echo "[INFO] Assumming you are already authenticated via 'gcloud auth login' in your terminal."
+fi
+
+github_connect_host --project_id "${pipeline_project_id}" --connection_name "${connection_name}" --secret_name "${secret_name}" --installation_id "${application_id}"
 
 github_link_repository --project_id "${pipeline_project_id}" --connection "${connection_name}" --repo_url "${repo_url}"
 
+
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-push" --connection "${connection_name}" --repo_name "${repo_name}" --event "push" --branch "main" --build_yaml_path "${build_yaml_path}"
+
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-manual" --connection "${connection_name}" --repo_name "${repo_name}" --event "manual" --branch "main" --build_yaml_path "${build_yaml_path}"
+
+create_github_trigger --project_id "${pipeline_project_id}" --trigger_name "${trigger_base_name}-pubsub" --connection "${connection_name}" --repo_name "${repo_name}" --event "pubsub" --topic "${pubsub_topic}" --branch "main" --build_yaml_path "${build_yaml_path}"
