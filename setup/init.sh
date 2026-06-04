@@ -14,7 +14,7 @@ setup_env_vars() {
     export secret_name="sec-gcpf-${env_char}-gh-token"
     export application_id="sec-gcpf-${env_char}-gh-app-id"
     export repo_url="https://github.com/ghermosoj/gitc-gcp-test-gh-migration"
-    export branch="master"
+    export branch="main"
 
     export build_yaml_path="cloudbuild.yaml"
 
@@ -35,18 +35,6 @@ fi
 env_char="${env}"
 
 setup_env_vars
-
-# export PATH="/workspace/.toolbox:$PATH"
-
-# activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
-
-if [ -f "/workspace/account.json" ]; then
-    echo "[INFO] Running on Cloud Build. Activating Service Account..."
-    activate_pipeline_service_account --env_char "${env_char}" --no_delete --credentials_file_path "/workspace/account.json"
-else
-    echo "[WARN] Running in LOCAL machine. Skipping service account activation..."
-    echo "[INFO] Assumming you are already authenticated via 'gcloud auth login' in your terminal."
-fi
 
 github_connect_host --project_id "${pipeline_project_id}" --connection_name "${connection_name}" --secret_name "${secret_name}" --installation_id "${application_id}"
 
